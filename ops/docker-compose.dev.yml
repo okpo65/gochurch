@@ -1,0 +1,83 @@
+version: '3.8'
+
+# Development version with hot reload and local volume mounts
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: fastapi_postgres_dev
+    environment:
+      POSTGRES_DB: fastapi_celery_db
+      POSTGRES_USER: fastapi_user
+      POSTGRES_PASSWORD: fastapi_password
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - fastapi_network
+
+  # Redis for Celery
+  redis:
+    image: redis:7-alpine
+    container_name: fastapi_redis_dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - fastapi_network
+
+  # FastAPI Application (Development with hot reload)
+  fastapi:
+    build:
+      context: ..
+      dockerfile: ops/Dockerfile.dev
+    container_name: fastapi_app_dev
+    environment:
+      - DATABASE_URL=postgresql://fastapi_user:fastapi_password@postgres:5432/fastapi_celery_db
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - fastapi_network
+    volumes:
+      - ..:/app  # Mount source code for hot reload
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        sleep 5 &&
+        echo 'Running database migrations...' &&
+        alembic upgrade head &&
+        echo 'Starting FastAPI server with hot reload...' &&
+        uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+  # Celery Worker (Development)
+  celery:
+    build:
+      context: ..
+      dockerfile: ops/Dockerfile.dev
+    container_name: fastapi_celery_dev
+    environment:
+      - DATABASE_URL=postgresql://fastapi_user:fastapi_password@postgres:5432/fastapi_celery_db
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - fastapi_network
+    volumes:
+      - ..:/app  # Mount source code for hot reload
+    command: celery -A celery_app worker --loglevel=info
+
+volumes:
+  postgres_dev_data:
+  redis_dev_data:
+
+networks:
+  fastapi_network:
+    driver: bridge

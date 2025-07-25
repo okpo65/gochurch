@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "fastapi-celery-app"
+version = "0.1.0"
+description = "Simple FastAPI server with Celery and PostgreSQL"
+authors = ["Your Name <your.email@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.104.1"
+uvicorn = "^0.24.0"
+celery = "^5.3.4"
+redis = "^5.0.1"
+sqlalchemy = "^2.0.23"
+psycopg2-binary = "^2.9.9"
+alembic = "^1.12.1"
+python-dotenv = "^1.0.0"
+pydantic = {extras = ["email"], version = "^2.5.0"}
+faker = "^20.1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+pytest-asyncio = "^0.21.1"
+httpx = "^0.25.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
