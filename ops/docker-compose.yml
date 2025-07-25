@@ -11,7 +11,6 @@ services:
       POSTGRES_PASSWORD: fastapi_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     ports:
       - "5432:5432"
     networks:
@@ -32,11 +31,7 @@ services:
       - redis_data:/data
     networks:
       - gochurch_network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+
 
   # FastAPI Application
   fastapi:
@@ -46,8 +41,6 @@ services:
     container_name: gochurch_fastapi
     environment:
       - DATABASE_URL=postgresql://fastapi_user:fastapi_password@postgres:5432/fastapi_celery_db
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - DEBUG=False
       - ENVIRONMENT=production
     ports:
@@ -62,16 +55,7 @@ services:
     volumes:
       - ../config/alembic:/app/config/alembic
     restart: unless-stopped
-    command: >
-      sh -c "
-        echo '🚀 Starting GoChurch Community Server...' &&
-        echo '⏳ Waiting for database...' &&
-        sleep 10 &&
-        echo '📊 Running database migrations...' &&
-        alembic -c config/alembic.ini upgrade head &&
-        echo '🌐 Starting FastAPI server...' &&
-        uvicorn main:app --host 0.0.0.0 --port 8000
-      "
+    command: sh -c "poetry install --only=main && poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
   # Celery Worker
   celery:
@@ -80,6 +64,8 @@ services:
       dockerfile: ops/Dockerfile
     container_name: gochurch_celery
     environment:
+      - DATABASE_URL=postgresql://fastapi_user:fastapi_password@postgres:5432/fastapi_celery_db
+      - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - DEBUG=False
@@ -92,11 +78,7 @@ services:
     networks:
       - gochurch_network
     restart: unless-stopped
-    command: >
-      sh -c "
-        echo '🔄 Starting Celery worker...' &&
-        celery -A workers.celery_app worker --loglevel=info
-      "
+    command: sh -c "poetry install --only=main && poetry run celery -A app.core.celery_app worker --loglevel=info"
 
 volumes:
   postgres_data:
