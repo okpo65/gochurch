@@ -4,7 +4,7 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:14-alpine
-    container_name: fastapi_postgres
+    container_name: gochurch_postgres
     environment:
       POSTGRES_DB: fastapi_celery_db
       POSTGRES_USER: fastapi_user
@@ -15,7 +15,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - fastapi_network
+      - gochurch_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U fastapi_user -d fastapi_celery_db"]
       interval: 30s
@@ -25,13 +25,13 @@ services:
   # Redis for Celery
   redis:
     image: redis:7-alpine
-    container_name: fastapi_redis
+    container_name: gochurch_redis
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
-      - fastapi_network
+      - gochurch_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -43,9 +43,11 @@ services:
     build:
       context: ..
       dockerfile: ops/Dockerfile
-    container_name: fastapi_app
+    container_name: gochurch_fastapi
     environment:
       - DATABASE_URL=postgresql://fastapi_user:fastapi_password@postgres:5432/fastapi_celery_db
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - DEBUG=False
       - ENVIRONMENT=production
     ports:
@@ -56,16 +58,18 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - fastapi_network
+      - gochurch_network
     volumes:
-      - ../alembic:/app/alembic
+      - ../config/alembic:/app/config/alembic
+    restart: unless-stopped
     command: >
       sh -c "
-        echo 'Waiting for database...' &&
-        sleep 5 &&
-        echo 'Running database migrations...' &&
-        alembic upgrade head &&
-        echo 'Starting FastAPI server...' &&
+        echo '🚀 Starting GoChurch Community Server...' &&
+        echo '⏳ Waiting for database...' &&
+        sleep 10 &&
+        echo '📊 Running database migrations...' &&
+        alembic -c config/alembic.ini upgrade head &&
+        echo '🌐 Starting FastAPI server...' &&
         uvicorn main:app --host 0.0.0.0 --port 8000
       "
 
@@ -74,23 +78,31 @@ services:
     build:
       context: ..
       dockerfile: ops/Dockerfile
-    container_name: fastapi_celery
+    container_name: gochurch_celery
     environment:
+      - DATABASE_URL=postgresql://fastapi_user:fastapi_password@postgres:5432/fastapi_celery_db
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DEBUG=False
+      - ENVIRONMENT=production
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     networks:
-      - fastapi_network
-    command: celery -A celery_app worker --loglevel=info
+      - gochurch_network
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo '🔄 Starting Celery worker...' &&
+        celery -A workers.celery_app worker --loglevel=info
+      "
 
 volumes:
   postgres_data:
   redis_data:
 
 networks:
-  fastapi_network:
+  gochurch_network:
     driver: bridge

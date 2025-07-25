@@ -5,53 +5,74 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:14-alpine
-    container_name: fastapi_postgres_dev
+    container_name: gochurch_postgres_dev
     environment:
       POSTGRES_DB: fastapi_celery_db
       POSTGRES_USER: fastapi_user
       POSTGRES_PASSWORD: fastapi_password
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     ports:
       - "5432:5432"
     networks:
-      - fastapi_network
+      - gochurch_dev_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fastapi_user -d fastapi_celery_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Redis for Celery
   redis:
     image: redis:7-alpine
-    container_name: fastapi_redis_dev
+    container_name: gochurch_redis_dev
     ports:
       - "6379:6379"
     volumes:
       - redis_dev_data:/data
     networks:
-      - fastapi_network
+      - gochurch_dev_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # FastAPI Application (Development with hot reload)
   fastapi:
     build:
       context: ..
       dockerfile: ops/Dockerfile.dev
-    container_name: fastapi_app_dev
+    container_name: gochurch_fastapi_dev
     environment:
       - DATABASE_URL=postgresql://fastapi_user:fastapi_password@postgres:5432/fastapi_celery_db
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DEBUG=True
+      - ENVIRONMENT=development
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
-      - fastapi_network
+      - gochurch_dev_network
     volumes:
       - ..:/app  # Mount source code for hot reload
+      - /app/__pycache__  # Exclude pycache
+      - /app/.venv  # Exclude virtual env if it exists
+    restart: unless-stopped
     command: >
       sh -c "
-        echo 'Waiting for database...' &&
-        sleep 5 &&
-        echo 'Running database migrations...' &&
-        alembic upgrade head &&
-        echo 'Starting FastAPI server with hot reload...' &&
+        echo '🚀 Starting GoChurch Development Server...' &&
+        echo '⏳ Waiting for database...' &&
+        sleep 10 &&
+        echo '📊 Running database migrations...' &&
+        alembic -c config/alembic.ini upgrade head &&
+        echo '🌐 Starting FastAPI server with hot reload...' &&
         uvicorn main:app --host 0.0.0.0 --port 8000 --reload
       "
 
@@ -60,24 +81,35 @@ services:
     build:
       context: ..
       dockerfile: ops/Dockerfile.dev
-    container_name: fastapi_celery_dev
+    container_name: gochurch_celery_dev
     environment:
       - DATABASE_URL=postgresql://fastapi_user:fastapi_password@postgres:5432/fastapi_celery_db
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DEBUG=True
+      - ENVIRONMENT=development
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
-      - fastapi_network
+      - gochurch_dev_network
     volumes:
       - ..:/app  # Mount source code for hot reload
-    command: celery -A celery_app worker --loglevel=info
+      - /app/__pycache__  # Exclude pycache
+      - /app/.venv  # Exclude virtual env if it exists
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo '🔄 Starting Celery worker (development)...' &&
+        celery -A workers.celery_app worker --loglevel=info --reload
+      "
 
 volumes:
   postgres_dev_data:
   redis_dev_data:
 
 networks:
-  fastapi_network:
+  gochurch_dev_network:
     driver: bridge
