@@ -17,9 +17,10 @@ RUN pip install --no-cache-dir poetry==1.6.1
 COPY pyproject.toml poetry.lock* ./
 
 # Configure poetry and install dependencies
-RUN poetry config virtualenvs.create false \
-    && poetry config virtualenvs.in-project false \
-    && poetry install
+RUN poetry install
+# RUN poetry config virtualenvs.create false \
+#     && poetry config virtualenvs.in-project false \
+#     && poetry install
 
 # Copy application code
 COPY . .

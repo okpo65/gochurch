@@ -80,7 +80,6 @@ services:
       dockerfile: ops/Dockerfile
     container_name: gochurch_celery
     environment:
-      - DATABASE_URL=postgresql://fastapi_user:fastapi_password@postgres:5432/fastapi_celery_db
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - DEBUG=False
