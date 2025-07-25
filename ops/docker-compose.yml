@@ -83,7 +83,7 @@ services:
     networks:
       - gochurch_network
     restart: unless-stopped
-    command: sh -c "poetry install --only=main && poetry run celery -A app.core.celery_app worker --loglevel=info"
+    command: sh -c "poetry install --only=main && poetry run celery -A app.main.workers.celery_app worker --loglevel=info"
 
 volumes:
   postgres_data:
