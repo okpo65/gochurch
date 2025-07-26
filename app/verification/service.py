@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from . import models, schemas
-import uuid
 
 
 class IdentityVerificationService:
@@ -19,11 +18,11 @@ class IdentityVerificationService:
         return db_verification
 
     @staticmethod
-    def get_verification(db: Session, verification_id: uuid.UUID) -> Optional[models.IdentityVerification]:
+    def get_verification(db: Session, verification_id: int) -> Optional[models.IdentityVerification]:
         return db.query(models.IdentityVerification).filter(models.IdentityVerification.id == verification_id).first()
 
     @staticmethod
-    def get_verifications_by_user(db: Session, user_id: uuid.UUID) -> List[models.IdentityVerification]:
+    def get_verifications_by_user(db: Session, user_id: int) -> List[models.IdentityVerification]:
         return db.query(models.IdentityVerification).filter(models.IdentityVerification.user_id == user_id).all()
 
     @staticmethod
@@ -33,7 +32,7 @@ class IdentityVerificationService:
         ).offset(skip).limit(limit).all()
 
     @staticmethod
-    def update_verification_status(db: Session, verification_id: uuid.UUID, verification_update: schemas.IdentityVerificationUpdate) -> Optional[models.IdentityVerification]:
+    def update_verification_status(db: Session, verification_id: int, verification_update: schemas.IdentityVerificationUpdate) -> Optional[models.IdentityVerification]:
         db_verification = db.query(models.IdentityVerification).filter(models.IdentityVerification.id == verification_id).first()
         if db_verification:
             db_verification.status = verification_update.status

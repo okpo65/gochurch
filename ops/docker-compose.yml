@@ -24,29 +24,29 @@ services:
     restart: unless-stopped
 
   # Test PostgreSQL Database (Separate Instance)
-  postgres_test:
-    image: postgres:14-alpine
-    container_name: gochurch_postgres_test
-    environment:
-      POSTGRES_DB: ${TEST_DB_NAME:-test_fastapi_celery_db}
-      POSTGRES_USER: ${TEST_DB_USER:-fastapi_user}
-      POSTGRES_PASSWORD: ${TEST_DB_PASSWORD:-fastapi_password}
-    volumes:
-      - postgres_test_data:/var/lib/postgresql/data
-      - ./init-scripts:/docker-entrypoint-initdb.d
-    ports:
-      - "${TEST_DB_PORT:-5433}:5432"
-    networks:
-      - gochurch_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${TEST_DB_USER:-fastapi_user} -d ${TEST_DB_NAME:-test_fastapi_celery_db}"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    profiles:
-      - test
-      - full
+  # postgres_test:
+  #   image: postgres:14-alpine
+  #   container_name: gochurch_postgres_test
+  #   environment:
+  #     POSTGRES_DB: ${TEST_DB_NAME:-test_fastapi_celery_db}
+  #     POSTGRES_USER: ${TEST_DB_USER:-fastapi_user}
+  #     POSTGRES_PASSWORD: ${TEST_DB_PASSWORD:-fastapi_password}
+  #   volumes:
+  #     - postgres_test_data:/var/lib/postgresql/data
+  #     - ./init-scripts:/docker-entrypoint-initdb.d
+  #   ports:
+  #     - "${TEST_DB_PORT:-5433}:5432"
+  #   networks:
+  #     - gochurch_network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${TEST_DB_USER:-fastapi_user} -d ${TEST_DB_NAME:-test_fastapi_celery_db}"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #   restart: unless-stopped
+  #   profiles:
+  #     - test
+  #     - full
 
   # Redis for Main Application
   redis:
@@ -113,8 +113,8 @@ services:
 volumes:
   postgres_data:
     driver: local
-  postgres_test_data:
-    driver: local
+  # postgres_test_data:
+  #   driver: local
   redis_data:
     driver: local
 

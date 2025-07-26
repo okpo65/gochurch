@@ -1,12 +1,11 @@
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from . import models, schemas
-import uuid
 
 
 class UserService:
     @staticmethod
-    def get_user(db: Session, user_id: uuid.UUID) -> Optional[models.User]:
+    def get_user(db: Session, user_id: int) -> Optional[models.User]:
         return db.query(models.User).filter(models.User.id == user_id).first()
 
     @staticmethod
@@ -25,7 +24,7 @@ class UserService:
         return db_user
 
     @staticmethod
-    def update_user(db: Session, user_id: uuid.UUID, user_update: schemas.UserUpdate) -> Optional[models.User]:
+    def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate) -> Optional[models.User]:
         db_user = db.query(models.User).filter(models.User.id == user_id).first()
         if db_user:
             update_data = user_update.dict(exclude_unset=True)
@@ -36,7 +35,7 @@ class UserService:
         return db_user
 
     @staticmethod
-    def delete_user(db: Session, user_id: uuid.UUID) -> bool:
+    def delete_user(db: Session, user_id: int) -> bool:
         db_user = db.query(models.User).filter(models.User.id == user_id).first()
         if db_user:
             db.delete(db_user)
@@ -47,11 +46,11 @@ class UserService:
 
 class ProfileService:
     @staticmethod
-    def get_profile(db: Session, profile_id: uuid.UUID) -> Optional[models.Profile]:
+    def get_profile(db: Session, profile_id: int) -> Optional[models.Profile]:
         return db.query(models.Profile).filter(models.Profile.id == profile_id).first()
 
     @staticmethod
-    def get_profile_by_user(db: Session, user_id: uuid.UUID) -> Optional[models.Profile]:
+    def get_profile_by_user(db: Session, user_id: int) -> Optional[models.Profile]:
         return db.query(models.Profile).filter(models.Profile.user_id == user_id).first()
 
     @staticmethod
@@ -68,7 +67,7 @@ class ProfileService:
         return db_profile
 
     @staticmethod
-    def update_profile(db: Session, profile_id: uuid.UUID, profile_update: schemas.ProfileUpdate) -> Optional[models.Profile]:
+    def update_profile(db: Session, profile_id: int, profile_update: schemas.ProfileUpdate) -> Optional[models.Profile]:
         db_profile = db.query(models.Profile).filter(models.Profile.id == profile_id).first()
         if db_profile:
             update_data = profile_update.dict(exclude_unset=True)
@@ -79,7 +78,7 @@ class ProfileService:
         return db_profile
 
     @staticmethod
-    def delete_profile(db: Session, profile_id: uuid.UUID) -> bool:
+    def delete_profile(db: Session, profile_id: int) -> bool:
         db_profile = db.query(models.Profile).filter(models.Profile.id == profile_id).first()
         if db_profile:
             db.delete(db_profile)

@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from . import models, schemas
-import uuid
 
 
 class ActionLogService:
@@ -38,18 +37,18 @@ class ActionLogService:
             return db_action_log
 
     @staticmethod
-    def get_action_log(db: Session, action_log_id: uuid.UUID) -> Optional[models.ActionLog]:
+    def get_action_log(db: Session, action_log_id: int) -> Optional[models.ActionLog]:
         return db.query(models.ActionLog).filter(models.ActionLog.id == action_log_id).first()
 
     @staticmethod
-    def get_user_actions(db: Session, user_id: uuid.UUID, action_type: Optional[str] = None, skip: int = 0, limit: int = 100) -> List[models.ActionLog]:
+    def get_user_actions(db: Session, user_id: int, action_type: Optional[str] = None, skip: int = 0, limit: int = 100) -> List[models.ActionLog]:
         query = db.query(models.ActionLog).filter(models.ActionLog.user_id == user_id)
         if action_type:
             query = query.filter(models.ActionLog.action_type == action_type)
         return query.order_by(models.ActionLog.created_at.desc()).offset(skip).limit(limit).all()
 
     @staticmethod
-    def get_target_actions(db: Session, target_type: str, target_id: uuid.UUID, action_type: Optional[str] = None, skip: int = 0, limit: int = 100) -> List[models.ActionLog]:
+    def get_target_actions(db: Session, target_type: str, target_id: int, action_type: Optional[str] = None, skip: int = 0, limit: int = 100) -> List[models.ActionLog]:
         query = db.query(models.ActionLog).filter(
             models.ActionLog.target_type == target_type,
             models.ActionLog.target_id == target_id
@@ -59,7 +58,7 @@ class ActionLogService:
         return query.order_by(models.ActionLog.created_at.desc()).offset(skip).limit(limit).all()
 
     @staticmethod
-    def toggle_action(db: Session, user_id: uuid.UUID, action_type: str, target_type: str, target_id: uuid.UUID) -> models.ActionLog:
+    def toggle_action(db: Session, user_id: int, action_type: str, target_type: str, target_id: int) -> models.ActionLog:
         existing_action = db.query(models.ActionLog).filter(
             models.ActionLog.user_id == user_id,
             models.ActionLog.action_type == action_type,
@@ -85,7 +84,7 @@ class ActionLogService:
             return ActionLogService.create_action_log(db, action_log)
 
     @staticmethod
-    def get_action_count(db: Session, target_type: str, target_id: uuid.UUID, action_type: str) -> int:
+    def get_action_count(db: Session, target_type: str, target_id: int, action_type: str) -> int:
         return db.query(models.ActionLog).filter(
             models.ActionLog.target_type == target_type,
             models.ActionLog.target_id == target_id,

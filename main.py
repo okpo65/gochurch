@@ -3,7 +3,6 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from sqlalchemy.orm import Session
 from workers.celery_app import celery_app
-from workers.tasks import add_numbers, process_data, generate_sample_data, cleanup_old_data
 from database import get_db, create_tables, TaskResult
 from config.config import settings
 import json

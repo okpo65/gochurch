@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
 from . import schemas, service
-import uuid
 
 router = APIRouter(prefix="/actions", tags=["action-logs"])
 
@@ -15,10 +14,10 @@ def create_action_log(action_log: schemas.ActionLogCreate, db: Session = Depends
 
 @router.post("/toggle", response_model=schemas.ActionLogResponse)
 def toggle_action(
-    user_id: uuid.UUID,
+    user_id: int,
     action_type: str,
     target_type: str,
-    target_id: uuid.UUID,
+    target_id: int,
     db: Session = Depends(get_db)
 ):
     if action_type not in ["view", "like", "bookmark", "report"]:
@@ -37,7 +36,7 @@ def toggle_action(
 
 @router.get("/user/{user_id}", response_model=List[schemas.ActionLogResponse])
 def get_user_actions(
-    user_id: uuid.UUID,
+    user_id: int,
     action_type: Optional[str] = None,
     skip: int = 0,
     limit: int = 100,
@@ -52,7 +51,7 @@ def get_user_actions(
 @router.get("/target/{target_type}/{target_id}", response_model=List[schemas.ActionLogResponse])
 def get_target_actions(
     target_type: str,
-    target_id: uuid.UUID,
+    target_id: int,
     action_type: Optional[str] = None,
     skip: int = 0,
     limit: int = 100,
@@ -70,7 +69,7 @@ def get_target_actions(
 @router.get("/count/{target_type}/{target_id}/{action_type}")
 def get_action_count(
     target_type: str,
-    target_id: uuid.UUID,
+    target_id: int,
     action_type: str,
     db: Session = Depends(get_db)
 ):
@@ -86,7 +85,7 @@ def get_action_count(
 
 
 @router.get("/{action_log_id}", response_model=schemas.ActionLogResponse)
-def get_action_log(action_log_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_action_log(action_log_id: int, db: Session = Depends(get_db)):
     db_action_log = service.ActionLogService.get_action_log(db, action_log_id=action_log_id)
     if db_action_log is None:
         raise HTTPException(status_code=404, detail="Action log not found")

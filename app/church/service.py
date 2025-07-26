@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from . import models, schemas
-import uuid
 
 
 class ChurchService:
@@ -18,7 +17,7 @@ class ChurchService:
         return db_church
 
     @staticmethod
-    def get_church(db: Session, church_id: uuid.UUID) -> Optional[models.Church]:
+    def get_church(db: Session, church_id: int) -> Optional[models.Church]:
         return db.query(models.Church).filter(models.Church.id == church_id).first()
 
     @staticmethod
@@ -26,7 +25,7 @@ class ChurchService:
         return db.query(models.Church).offset(skip).limit(limit).all()
 
     @staticmethod
-    def update_church(db: Session, church_id: uuid.UUID, church_update: schemas.ChurchUpdate) -> Optional[models.Church]:
+    def update_church(db: Session, church_id: int, church_update: schemas.ChurchUpdate) -> Optional[models.Church]:
         db_church = db.query(models.Church).filter(models.Church.id == church_id).first()
         if db_church:
             update_data = church_update.dict(exclude_unset=True)
@@ -37,7 +36,7 @@ class ChurchService:
         return db_church
 
     @staticmethod
-    def delete_church(db: Session, church_id: uuid.UUID) -> bool:
+    def delete_church(db: Session, church_id: int) -> bool:
         db_church = db.query(models.Church).filter(models.Church.id == church_id).first()
         if db_church:
             db.delete(db_church)
