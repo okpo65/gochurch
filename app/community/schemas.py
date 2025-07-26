@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
-import uuid
 
 
 class BoardBase(BaseModel):
@@ -33,14 +32,14 @@ class BoardUpdate(BaseModel):
 
 
 class BoardResponse(BoardBase):
-    id: uuid.UUID = Field(description="Unique identifier for the board")
+    id: int = Field(description="Unique identifier for the board")
     created_at: datetime = Field(description="When the board was created")
 
     class Config:
         from_attributes = True
         schema_extra = {
             "example": {
-                "id": "550e8400-e29b-41d4-a716-446655440003",
+                "id": 1,
                 "title": "General Discussion",
                 "description": "A place for general community discussions and announcements",
                 "created_at": "2024-01-15T10:00:00Z"
@@ -54,12 +53,12 @@ class PostBase(BaseModel):
 
 
 class PostCreate(PostBase):
-    board_id: uuid.UUID = Field(description="UUID of the board this post belongs to")
+    board_id: int = Field(description="ID of the board this post belongs to")
     
     class Config:
         schema_extra = {
             "example": {
-                "board_id": "550e8400-e29b-41d4-a716-446655440003",
+                "board_id": 1,
                 "title": "Welcome to our community!",
                 "contents": "Hello everyone! Welcome to our church community board. Feel free to introduce yourselves and share what's on your heart."
             }
@@ -80,9 +79,9 @@ class PostUpdate(BaseModel):
 
 
 class PostResponse(PostBase):
-    id: uuid.UUID = Field(description="Unique identifier for the post")
-    board_id: uuid.UUID = Field(description="UUID of the board this post belongs to")
-    author_id: uuid.UUID = Field(description="UUID of the user who created this post")
+    id: int = Field(description="Unique identifier for the post")
+    board_id: int = Field(description="ID of the board this post belongs to")
+    author_id: int = Field(description="ID of the user who created this post")
     created_at: datetime = Field(description="When the post was created")
     updated_at: Optional[datetime] = Field(None, description="When the post was last updated")
     like_count: int = Field(description="Number of likes this post has received")
@@ -93,9 +92,9 @@ class PostResponse(PostBase):
         from_attributes = True
         schema_extra = {
             "example": {
-                "id": "550e8400-e29b-41d4-a716-446655440004",
-                "board_id": "550e8400-e29b-41d4-a716-446655440003",
-                "author_id": "550e8400-e29b-41d4-a716-446655440000",
+                "id": 1,
+                "board_id": 1,
+                "author_id": 1,
                 "title": "Welcome to our community!",
                 "contents": "Hello everyone! Welcome to our church community board.",
                 "created_at": "2024-01-15T11:00:00Z",
@@ -112,25 +111,25 @@ class PostTagBase(BaseModel):
 
 
 class PostTagCreate(PostTagBase):
-    post_id: uuid.UUID = Field(description="UUID of the post this tag belongs to")
+    post_id: int = Field(description="ID of the post this tag belongs to")
     
     class Config:
         schema_extra = {
             "example": {
-                "post_id": "550e8400-e29b-41d4-a716-446655440004",
+                "post_id": 1,
                 "tag": "welcome"
             }
         }
 
 
 class PostTagResponse(PostTagBase):
-    post_id: uuid.UUID = Field(description="UUID of the post this tag belongs to")
+    post_id: int = Field(description="ID of the post this tag belongs to")
 
     class Config:
         from_attributes = True
         schema_extra = {
             "example": {
-                "post_id": "550e8400-e29b-41d4-a716-446655440004",
+                "post_id": 1,
                 "tag": "welcome"
             }
         }
@@ -141,13 +140,13 @@ class CommentBase(BaseModel):
 
 
 class CommentCreate(CommentBase):
-    post_id: uuid.UUID = Field(description="UUID of the post this comment belongs to")
-    parent_id: Optional[uuid.UUID] = Field(None, description="UUID of the parent comment (for nested comments)")
+    post_id: int = Field(description="ID of the post this comment belongs to")
+    parent_id: Optional[int] = Field(None, description="ID of the parent comment (for nested comments)")
     
     class Config:
         schema_extra = {
             "example": {
-                "post_id": "550e8400-e29b-41d4-a716-446655440004",
+                "post_id": 1,
                 "contents": "Thank you for the warm welcome! Excited to be part of this community.",
                 "parent_id": None
             }
@@ -166,19 +165,19 @@ class CommentUpdate(BaseModel):
 
 
 class CommentResponse(CommentBase):
-    id: uuid.UUID = Field(description="Unique identifier for the comment")
-    post_id: uuid.UUID = Field(description="UUID of the post this comment belongs to")
-    author_id: uuid.UUID = Field(description="UUID of the user who created this comment")
-    parent_id: Optional[uuid.UUID] = Field(None, description="UUID of the parent comment (for nested comments)")
+    id: int = Field(description="Unique identifier for the comment")
+    post_id: int = Field(description="ID of the post this comment belongs to")
+    author_id: int = Field(description="ID of the user who created this comment")
+    parent_id: Optional[int] = Field(None, description="ID of the parent comment (for nested comments)")
     created_at: datetime = Field(description="When the comment was created")
 
     class Config:
         from_attributes = True
         schema_extra = {
             "example": {
-                "id": "550e8400-e29b-41d4-a716-446655440005",
-                "post_id": "550e8400-e29b-41d4-a716-446655440004",
-                "author_id": "550e8400-e29b-41d4-a716-446655440000",
+                "id": 1,
+                "post_id": 1,
+                "author_id": 1,
                 "parent_id": None,
                 "contents": "Thank you for the warm welcome! Excited to be part of this community.",
                 "created_at": "2024-01-15T11:30:00Z"

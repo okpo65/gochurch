@@ -33,15 +33,43 @@ class TaskResult(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-# Import all models to ensure they are registered with Base
-from app.user.models import User, Profile
-from app.church.models import Church
-from app.verification.models import IdentityVerification
-from app.community.models import Board, Post, PostTag, Comment
-from app.action.models import ActionLog
+def import_models():
+    """Import all models to ensure they are registered with Base"""
+    try:
+        # Import the models registry which imports all models
+        from app.models import get_all_models
+        return get_all_models()
+    except ImportError as e:
+        print(f"Warning: Could not import models registry: {e}")
+        # Fallback to direct imports
+        try:
+            from app.user.models import User, Profile
+            from app.church.models import Church
+            from app.verification.models import IdentityVerification
+            from app.community.models import Board, Post, PostTag, Comment
+            from app.action.models import ActionLog
+            
+            return {
+                'User': User,
+                'Profile': Profile,
+                'Church': Church,
+                'IdentityVerification': IdentityVerification,
+                'Board': Board,
+                'Post': Post,
+                'PostTag': PostTag,
+                'Comment': Comment,
+                'ActionLog': ActionLog
+            }
+        except ImportError as e2:
+            print(f"Error: Could not import models: {e2}")
+            return {}
 
 # Create tables
 def create_tables():
+    # Import models first
+    models = import_models()
+    print(f"✓ Imported {len(models)} model classes")
+    
     # Enable UUID extension for PostgreSQL using proper SQLAlchemy syntax
     try:
         with engine.begin() as conn:

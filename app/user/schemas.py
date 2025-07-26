@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
-import uuid
 
 
 class UserBase(BaseModel):
@@ -33,14 +32,14 @@ class UserUpdate(BaseModel):
 
 
 class UserResponse(UserBase):
-    id: uuid.UUID = Field(description="Unique identifier for the user")
+    id: int = Field(description="Unique identifier for the user")
     created_at: datetime = Field(description="When the user was created")
 
     class Config:
         from_attributes = True
         schema_extra = {
             "example": {
-                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "id": 1,
                 "is_blocked": False,
                 "is_admin": False,
                 "created_at": "2024-01-15T10:30:00Z"
@@ -51,19 +50,19 @@ class UserResponse(UserBase):
 class ProfileBase(BaseModel):
     nickname: Optional[str] = Field(None, max_length=100, description="Display name for the user")
     thumbnail: Optional[str] = Field(None, description="URL to the user's profile image")
-    church_id: Optional[uuid.UUID] = Field(None, description="UUID of the church this user belongs to")
+    church_id: Optional[int] = Field(None, description="ID of the church this user belongs to")
 
 
 class ProfileCreate(ProfileBase):
-    user_id: uuid.UUID = Field(description="UUID of the user this profile belongs to")
+    user_id: int = Field(description="ID of the user this profile belongs to")
     
     class Config:
         schema_extra = {
             "example": {
-                "user_id": "550e8400-e29b-41d4-a716-446655440000",
+                "user_id": 1,
                 "nickname": "john_doe",
                 "thumbnail": "https://example.com/avatars/john.jpg",
-                "church_id": "550e8400-e29b-41d4-a716-446655440001"
+                "church_id": 2
             }
         }
 
@@ -79,19 +78,19 @@ class ProfileUpdate(ProfileBase):
 
 
 class ProfileResponse(ProfileBase):
-    id: uuid.UUID = Field(description="Unique identifier for the profile")
-    user_id: uuid.UUID = Field(description="UUID of the user this profile belongs to")
+    id: int = Field(description="Unique identifier for the profile")
+    user_id: int = Field(description="ID of the user this profile belongs to")
     created_at: datetime = Field(description="When the profile was created")
 
     class Config:
         from_attributes = True
         schema_extra = {
             "example": {
-                "id": "550e8400-e29b-41d4-a716-446655440002",
-                "user_id": "550e8400-e29b-41d4-a716-446655440000",
+                "id": 1,
+                "user_id": 1,
                 "nickname": "john_doe",
                 "thumbnail": "https://example.com/avatars/john.jpg",
-                "church_id": "550e8400-e29b-41d4-a716-446655440001",
+                "church_id": 2,
                 "created_at": "2024-01-15T10:35:00Z"
             }
         }

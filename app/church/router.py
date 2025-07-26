@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from typing import List
 from database import get_db
 from . import schemas, service
-import uuid
 
 router = APIRouter(prefix="/churches", tags=["churches"])
 
@@ -47,17 +46,17 @@ def read_churches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
             response_model=schemas.ChurchResponse,
             summary="Get church by ID",
             description="""
-Retrieve a specific church by its UUID.
+Retrieve a specific church by its ID.
 
-- **church_id**: The UUID of the church to retrieve
+- **church_id**: The ID of the church to retrieve
 
-Example UUID: `550e8400-e29b-41d4-a716-446655440001`
+Example ID: `1`
             """,
             response_description="The requested church information",
             responses={
                 404: {"description": "Church not found"}
             })
-def read_church(church_id: uuid.UUID, db: Session = Depends(get_db)):
+def read_church(church_id: int, db: Session = Depends(get_db)):
     db_church = service.ChurchService.get_church(db, church_id=church_id)
     if db_church is None:
         raise HTTPException(status_code=404, detail="Church not found")
@@ -70,7 +69,7 @@ def read_church(church_id: uuid.UUID, db: Session = Depends(get_db)):
             description="""
 Update an existing church's information.
 
-- **church_id**: The UUID of the church to update
+- **church_id**: The ID of the church to update
 - Only provided fields will be updated (partial updates supported)
 
 This is typically used by church administrators to keep contact information current.
@@ -79,7 +78,7 @@ This is typically used by church administrators to keep contact information curr
             responses={
                 404: {"description": "Church not found"}
             })
-def update_church(church_id: uuid.UUID, church_update: schemas.ChurchUpdate, db: Session = Depends(get_db)):
+def update_church(church_id: int, church_update: schemas.ChurchUpdate, db: Session = Depends(get_db)):
     db_church = service.ChurchService.update_church(db, church_id=church_id, church_update=church_update)
     if db_church is None:
         raise HTTPException(status_code=404, detail="Church not found")
@@ -95,13 +94,13 @@ Delete a church from the directory.
 ⚠️ **Warning**: This will affect all users and profiles associated with this church. 
 Consider updating associated records before deletion.
 
-- **church_id**: The UUID of the church to delete
+- **church_id**: The ID of the church to delete
                """,
                response_description="Confirmation message",
                responses={
                    404: {"description": "Church not found"}
                })
-def delete_church(church_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_church(church_id: int, db: Session = Depends(get_db)):
     success = service.ChurchService.delete_church(db, church_id=church_id)
     if not success:
         raise HTTPException(status_code=404, detail="Church not found")

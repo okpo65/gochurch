@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-import uuid
 
 
 class ChurchBase(BaseModel):
@@ -36,13 +35,13 @@ class ChurchUpdate(BaseModel):
 
 
 class ChurchResponse(ChurchBase):
-    id: uuid.UUID = Field(description="Unique identifier for the church")
+    id: int = Field(description="Unique identifier for the church")
 
     class Config:
         from_attributes = True
         schema_extra = {
             "example": {
-                "id": "550e8400-e29b-41d4-a716-446655440001",
+                "id": 1,
                 "name": "First Baptist Church",
                 "address": "123 Main Street, Anytown, USA 12345",
                 "phone_number": "+1-555-0123"
