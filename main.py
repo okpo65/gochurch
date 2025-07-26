@@ -117,7 +117,7 @@ For detailed examples and usage patterns, see the individual endpoint documentat
             "description": "Development server"
         },
         {
-            "url": "https://api.gochurch.com",
+            "url": "http://3.39.195.204:8000",
             "description": "Production server"
         }
     ]
