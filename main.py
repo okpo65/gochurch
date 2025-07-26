@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from sqlalchemy.orm import Session
@@ -31,7 +32,7 @@ def custom_openapi():
 A comprehensive church community platform built with FastAPI, featuring:
 
 ### 🏛️ **Core Features**
-- **UUID-based Architecture** - Enhanced security with UUID primary keys
+- **Integer-based Architecture** - Enhanced performance with integer primary keys
 - **Church Management** - Directory of churches with contact information
 - **Identity Verification** - Photo-based verification system with admin review
 - **Discussion Boards** - Organized discussion boards for community engagement
@@ -39,13 +40,14 @@ A comprehensive church community platform built with FastAPI, featuring:
 - **Action Logging** - Track user interactions (views, likes, bookmarks, reports)
 
 ### 🔐 **Security**
-- UUID primary keys prevent enumeration attacks
+- Integer primary keys with auto-increment
 - Proper foreign key constraints with CASCADE deletes
 - Input validation with Pydantic schemas
 - SQL injection protection with SQLAlchemy ORM
+- CORS middleware for cross-origin requests
 
 ### 📊 **Database Schema**
-Based on PostgreSQL with UUID extension, featuring:
+Based on PostgreSQL with integer primary keys, featuring:
 - Users with admin/blocked status
 - User profiles linked to churches
 - Identity verification workflow
@@ -60,7 +62,7 @@ Based on PostgreSQL with UUID extension, featuring:
 5. Start posting: `POST /boards/{board_id}/posts`
 
 ### 📝 **API Usage**
-All endpoints use UUID identifiers. Example UUID: `550e8400-e29b-41d4-a716-446655440000`
+All endpoints use integer identifiers. Example ID: `1`
 
 For detailed examples and usage patterns, see the individual endpoint documentation below.
         """,
@@ -85,6 +87,10 @@ For detailed examples and usage patterns, see the individual endpoint documentat
             {
                 "name": "action-logs",
                 "description": "User action tracking. Log and manage user interactions like views, likes, bookmarks, and reports."
+            },
+            {
+                "name": "development",
+                "description": "Development and testing endpoints for sample data generation and cleanup."
             },
             {
                 "name": "legacy",
@@ -129,6 +135,15 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Use specific domains in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Set custom OpenAPI schema
 app.openapi = custom_openapi
 
@@ -150,6 +165,7 @@ def read_root():
         "message": "GoChurch Community Server is running!",
         "version": "2.0.0",
         "environment": settings.ENVIRONMENT,
+        "cors_enabled": True,
         "documentation": {
             "swagger_ui": "/docs",
             "redoc": "/redoc",
@@ -178,217 +194,21 @@ def read_root():
             }
         },
         "features": [
-            "UUID-based primary keys for enhanced security",
+            "Integer-based primary keys for enhanced performance",
             "Church management and directory",
             "Identity verification with photo upload",
             "Hierarchical board and post system",
             "Comprehensive action logging",
             "User profiles with church association",
             "Nested comment threads",
-            "Post tagging system"
+            "Post tagging system",
+            "CORS enabled for cross-origin requests"
         ],
         "database": {
             "type": "PostgreSQL",
-            "uuid_extension": "uuid-ossp",
-            "primary_keys": "UUID v4"
+            "primary_keys": "Integer (auto-increment)"
         }
     }
-
-
-@app.post("/add")
-def add_task(a: int, b: int, db: Session = Depends(get_db)):
-    """Add two numbers using Celery task"""
-    task = add_numbers.delay(a, b)
-    
-    # Save task info to database
-    db_task = TaskResult(
-        task_id=task.id,
-        task_type="add_numbers",
-        status="PENDING"
-    )
-    db.add(db_task)
-    db.commit()
-    
-    return {"task_id": task.id, "status": "Task submitted"}
-
-
-@app.post("/process")
-def process_task(data: str, db: Session = Depends(get_db)):
-    """Process data using Celery task"""
-    task = process_data.delay(data)
-    
-    # Save task info to database
-    db_task = TaskResult(
-        task_id=task.id,
-        task_type="process_data",
-        status="PENDING"
-    )
-    db.add(db_task)
-    db.commit()
-    
-    return {"task_id": task.id, "status": "Task submitted"}
-
-
-@app.get("/task/{task_id}")
-def get_task_result(task_id: str, db: Session = Depends(get_db)):
-    """Get task result by task ID"""
-    task = celery_app.AsyncResult(task_id)
-    
-    # Update database record
-    db_task = db.query(TaskResult).filter(TaskResult.task_id == task_id).first()
-    
-    if task.state == "PENDING":
-        result = {"task_id": task_id, "status": "PENDING", "result": None}
-    elif task.state == "SUCCESS":
-        result = {"task_id": task_id, "status": "SUCCESS", "result": task.result}
-        if db_task:
-            db_task.status = "SUCCESS"
-            db_task.result = json.dumps(task.result)
-            db.commit()
-    else:
-        result = {"task_id": task_id, "status": task.state, "result": str(task.info)}
-        if db_task:
-            db_task.status = task.state
-            db_task.result = str(task.info)
-            db.commit()
-    
-    return result
-
-
-@app.get("/tasks")
-def get_all_tasks(db: Session = Depends(get_db)):
-    """Get all tasks from database"""
-    tasks = db.query(TaskResult).all()
-    return {"tasks": tasks}
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-# Development endpoints for sample data
-@app.post("/generate-sample-data",
-          summary="Generate sample data",
-          description="Generate comprehensive sample data for testing and development purposes.",
-          tags=["development"],
-          response_description="Task submission confirmation")
-def generate_sample_data_task(db: Session = Depends(get_db)):
-    task = generate_sample_data.delay()
-    
-    # Save task to database
-    db_task = TaskResult(
-        task_id=task.id,
-        task_type="generate_sample_data",
-        status="PENDING",
-        result=None
-    )
-    db.add(db_task)
-    db.commit()
-    
-    return {"task_id": task.id, "status": "Sample data generation started", "message": "This will create churches, users, posts, and other sample data"}
-
-
-@app.post("/cleanup-data",
-          summary="Cleanup test data",
-          description="Remove all test data from the database. Use with caution!",
-          tags=["development"],
-          response_description="Task submission confirmation")
-def cleanup_data_task(db: Session = Depends(get_db)):
-    task = cleanup_old_data.delay()
-    
-    # Save task to database
-    db_task = TaskResult(
-        task_id=task.id,
-        task_type="cleanup_old_data",
-        status="PENDING",
-        result=None
-    )
-    db.add(db_task)
-    db.commit()
-    
-    return {"task_id": task.id, "status": "Data cleanup started", "message": "This will remove all data from the database"}
-
-
-# Legacy endpoints (keeping for backward compatibility)
-@app.post("/add",
-          summary="Add two numbers (Legacy)",
-          description="Legacy Celery task endpoint for adding two numbers. Kept for backward compatibility.",
-          tags=["legacy"],
-          response_description="Task submission confirmation")
-def add_task(a: int, b: int, db: Session = Depends(get_db)):
-    task = add_numbers.delay(a, b)
-    
-    # Save task to database
-    db_task = TaskResult(
-        task_id=task.id,
-        task_type="add_numbers",
-        status="PENDING",
-        result=None
-    )
-    db.add(db_task)
-    db.commit()
-    
-    return {"task_id": task.id, "status": "Task submitted"}
-
-
-@app.post("/process",
-          summary="Process data (Legacy)",
-          description="Legacy Celery task endpoint for processing text data. Kept for backward compatibility.",
-          tags=["legacy"],
-          response_description="Task submission confirmation")
-def process_task(data: str, db: Session = Depends(get_db)):
-    task = process_data.delay(data)
-    
-    # Save task to database
-    db_task = TaskResult(
-        task_id=task.id,
-        task_type="process_data",
-        status="PENDING",
-        result=None
-    )
-    db.add(db_task)
-    db.commit()
-    
-    return {"task_id": task.id, "status": "Task submitted"}
-
-
-@app.get("/task/{task_id}",
-         summary="Get task result (Legacy)",
-         description="Get the result of a Celery task by its ID. Legacy endpoint for backward compatibility.",
-         tags=["legacy"],
-         response_description="Task status and result")
-def get_task_result(task_id: str, db: Session = Depends(get_db)):
-    # Get result from Celery
-    result = celery_app.AsyncResult(task_id)
-    
-    # Update database record
-    db_task = db.query(TaskResult).filter(TaskResult.task_id == task_id).first()
-    
-    if result.state == "PENDING":
-        response = {"task_id": task_id, "status": "PENDING", "result": None}
-    elif result.state == "SUCCESS":
-        response = {"task_id": task_id, "status": "SUCCESS", "result": result.result}
-        if db_task:
-            db_task.status = "SUCCESS"
-            db_task.result = json.dumps(result.result)
-            db.commit()
-    else:
-        response = {"task_id": task_id, "status": result.state, "result": str(result.info)}
-        if db_task:
-            db_task.status = result.state
-            db_task.result = str(result.info)
-            db.commit()
-    
-    return response
-
-
-@app.get("/tasks",
-         summary="Get all tasks (Legacy)",
-         description="Get all Celery tasks from the database. Legacy endpoint for backward compatibility.",
-         tags=["legacy"],
-         response_description="List of all tasks")
-def get_all_tasks(db: Session = Depends(get_db)):
-    tasks = db.query(TaskResult).all()
-    return {"tasks": tasks}
 
 
 if __name__ == "__main__":

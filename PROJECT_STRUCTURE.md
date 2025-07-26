@@ -176,27 +176,3 @@ open docs/SWAGGER_DOCS.md
 - **Docker** for deployment
 
 ## 🔧 **Import Path Updates**
-
-Due to reorganization, some imports have been updated:
-
-```python
-# Old imports
-from config import settings
-from celery_app import celery_app
-from tasks import add_numbers
-
-# New imports  
-from config.config import settings
-from workers.celery_app import celery_app
-from workers.tasks import add_numbers
-```
-
-## 📚 **Next Steps**
-
-1. **Explore the structure** - Navigate through folders to understand organization
-2. **Read documentation** - Check `docs/` folder for detailed guides
-3. **Run tests** - Use `scripts/run_tests.py` to validate everything works
-4. **Generate sample data** - Use `scripts/run_dev_tests.py` for development
-5. **Start developing** - Add new features following the modular pattern
-
-This organized structure makes the GoChurch Community Server much easier to understand, maintain, and extend!
