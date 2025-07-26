@@ -61,12 +61,12 @@ docs/
 !README.md
 
 # Tests (exclude from production builds)
-tests/
-pytest.ini
-.pytest_cache/
+# tests/
+# pytest.ini
+# .pytest_cache/
 
 # Scripts (exclude from production builds)
-scripts/
+# scripts/
 
 # Logs
 *.log
